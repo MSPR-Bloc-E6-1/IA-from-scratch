@@ -4,10 +4,7 @@ from utils.utils import clear_terminal
 
 from train import train_model
 from evaluate import evaluate_model
-from detect import inferer_image
-from visual import interface
-
-
+from detect import infer_image
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--train', action='store_true')
@@ -32,20 +29,19 @@ elif parser.parse_known_args()[0].detect:
 args = parser.parse_args()
 
 if sum([args.train, args.eval, args.detect]) > 1:
-    raise ValueError("Seuls un argument parmi 'train', 'eval' et 'detect' peut être spécifié.")
+    raise ValueError("Only one argument among 'train', 'eval', and 'detect' can be specified.")
 elif args.train:
     clear_terminal()
-    print("Entrainement du model : \n \n \n")
+    print("Training the model: \n \n \n")
     train_model(args.epoch, args.batch_size, args.weight_name, args.learning_rate, args.augmentation)
 elif args.eval:
     clear_terminal()
-    print("Evaluation du model : \n \n \n")
+    print("Evaluating the model: \n \n \n")
     evaluate_model(args.model_path, args.metrics, args.no_save_cm, args.no_save_txt)
 elif args.detect:
     clear_terminal()
-    print("Détection de la classe : \n \n \n")
-    inferer_image(args.image_path, args.model_path)
+    print("Detecting the class: \n \n \n")
+    infer_image(args.image_path, args.model_path)
 else:
     clear_terminal()
-    print("Interface lancée")
-    interface()
+    print("No argument specified. Please specify one argument among 'train', 'eval', and 'detect'.")
