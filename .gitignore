@@ -2,8 +2,6 @@
 *.tf
 metrics/*/
 data/*/
-data_desorganized/cat/*/
-data_desorganized/no-cat/*/
 ./__pycache__
 *.pyc
 

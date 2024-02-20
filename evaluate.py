@@ -33,7 +33,7 @@ def evaluate_model(model_path, metrics=['accuracy', 'confusion_matrix', 'classif
     Returns:
         None
     """
-    depo = "metrics/"+model_path.split("/")[-1]
+    depo = "metrics/"+model_path.split("/")[-1]+"/"
     depo = depo.split(".")[0]
     if not os.path.exists(depo):
         os.makedirs(depo)
@@ -59,20 +59,20 @@ def evaluate_model(model_path, metrics=['accuracy', 'confusion_matrix', 'classif
         results['confusion_matrix'] = conf_matrix
         if save_cm:
             plt.figure(figsize=(8, 6))
-            sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['No-Chat', 'Chat'], yticklabels=['No-Chat', 'Chat'])
+            sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox'], yticklabels=['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox'])
             plt.title('Confusion Matrix')
             plt.xlabel('Predictions')
             plt.ylabel('True Labels')
-            plt.savefig(depo+'confusion_matrix.png')
+            plt.savefig(depo+'/confusion_matrix.png')
 
     # Calculate classification report
     if 'classification_report' in metrics:
-        class_report = classification_report(np.argmax(y_test, axis=1), y_pred_classes, target_names=['No-Chat', 'Chat'])
+        class_report = classification_report(np.argmax(y_test, axis=1), y_pred_classes, target_names=['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox'])
         results['classification_report'] = class_report
 
     # Save textual metrics in a file
     if save_txt:
-        with open(depo+'metrics.txt', 'w') as file:
+        with open(depo+'/metrics.txt', 'w') as file:
             for metric, value in results.items():
                 file.write(f'{metric}: {value}\n')
     clear_terminal()

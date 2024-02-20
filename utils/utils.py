@@ -7,12 +7,11 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 from PIL import Image
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
-from tqdm import tqdm
 
 def load_images(directory, label):
     images = []
     labels = []
-    for file in tqdm(os.listdir(directory), desc=f"Loading images for label '{label}'"):
+    for file in os.listdir(directory):
         file_path = os.path.join(directory, file)
 
         try:

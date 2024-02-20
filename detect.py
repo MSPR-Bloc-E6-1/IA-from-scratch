@@ -14,30 +14,23 @@ from utils.data_traitement import load_data
 
 def infer_image(image_path, model_path):
     """
-    Performs inference on an image using the given model.
+    Effectue une inférence sur une image en utilisant le modèle donné.
 
-    Parameters:
-        image_path (str): Path to the image to infer.
-        model_path (str): Path to the model weights file.
+    Paramètres :
+        image_path (str) : Chemin vers l'image à inférer.
+        model_path (str) : Chemin vers le fichier de poids du modèle.
 
-    Returns:
+    Retourne :
         None
     """
     image = load_data(img_path=image_path)
     model = load_model(model_path)
 
-    # Perform inference
     predictions = model.predict(image)
 
-    # Interpret the results
     class_index = np.argmax(predictions)
-    classes = {0: 'not a cat', 1: 'cat'}
+    classes = {0: 'background', 1: 'beaver', 2: 'cat', 3: 'dog', 4: 'coyote', 5: 'squirrel', 6: 'rabbit', 7: 'wolf', 8: 'lynx', 9: 'bear', 10: 'puma', 11: 'rat', 12: 'raccoon', 13: 'fox'}
     predicted_class = classes[class_index]
     clear_terminal()
-    print(f"Prediction for image {image_path}: {predicted_class}")
+    print(f"Prédiction pour l'image {image_path} : {predicted_class}")
     return predicted_class
-
-
-if __name__ == "__main__":
-    infer_image("D:\\EPSI\\Bachelor\\B3\\int-cont\\gh-actions\\data\\test\\cat\\0.jpg", "weights/model.tf")
-    infer_image("D:\\EPSI\\Bachelor\\B3\\int-cont\\gh-actions\\data\\test\\no-cat\\0a1a5a2140.jpg", "weights/model.tf")
