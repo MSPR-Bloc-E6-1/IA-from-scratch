@@ -6,6 +6,8 @@ from train import train_model
 from evaluate import evaluate_model
 from detect import infer_image
 
+import os
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--train', action='store_true')
 parser.add_argument('--eval', action='store_true')
@@ -35,11 +37,13 @@ elif args.train:
     clear_terminal()
     print("Training the model: \n \n \n")
     train_model(args.epoch, args.batch_size, args.weight_name, args.learning_rate, args.augmentation)
-    if not args.auto_eval :
+    if args.auto_eval == True:
         clear_terminal()
         print("Evaluating the model: \n \n \n")
-        evaluate_model(args.model_path, args.metrics, args.no_save_cm, args.no_save_txt)
-
+        evaluate_model("./weights/"+args.weight_name+".h5", ['accuracy', 'confusion_matrix', 'classification_report'])
+    if args.augmentation != 0.0 :
+        for dossier_racine, _, fichiers in os.walk('./data'):
+            [os.remove(os.path.join(dossier_racine, fichier)) for fichier in fichiers if fichier.endswith('_augmented')]
 elif args.eval:
     clear_terminal()
     print("Evaluating the model: \n \n \n")
