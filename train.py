@@ -28,28 +28,28 @@ def train_model(epoch=5, batch_size=32, weight_name="model", learning_rate=0.01,
     X_train, y_train = load_data(type="train", augmentation=augmentation)
     X_val, y_val = load_data(type="val")
 
-    # Charger le modèle VGG16 pré-entraîné sans la couche fully connected
+    # Load pretrained VGG16 model without the fully connected layer
     base_model = VGG16(weights='imagenet', include_top=False, input_shape=(128, 128, 3))
 
-    # Congeler les couches pré-entraînées
+    # Freeze pretrained layers
     for layer in base_model.layers:
         layer.trainable = False
 
-    # Ajouter des couches convolutionnelles personnalisées
+    # Add personal convolunional layers
     x = base_model.output
     x = layers.GlobalAveragePooling2D()(x)
 
-    # Ajouter des couches fully connected personnalisées
+    # Add personnal fully connected layers
     x = layers.Dense(256, activation='relu')(x)
     x = layers.Dropout(0.5)(x)
     x = layers.Dense(14, activation='softmax')(x)
 
     model = Model(base_model.input, x)
 
-    # Compiler le modèle
+
     model.compile(optimizer=Adam(lr=learning_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
-    # Ajouter le callback ModelCheckpoint
+    # ModelCheckpoint
     checkpoint = ModelCheckpoint(weight_name + ".h5", monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 
     clear_terminal()
