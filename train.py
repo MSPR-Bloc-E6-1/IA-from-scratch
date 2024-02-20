@@ -16,10 +16,12 @@ from tensorflow.keras import Model
 
 import tensorflow as tf
 
+from tensorflow.keras.callbacks import ModelCheckpoint
+
 def train_model(epoch=5, batch_size=32, weight_name="model", learning_rate=0.01, augmentation=0.0):
     weight_name = "weights/" + weight_name
     i = 1
-    while os.path.exists(weight_name):
+    while os.path.exists(weight_name+".h5"):
         weight_name = weight_name[:-3] + "_" + str(i)
         i += 1
     clear_terminal()
@@ -47,26 +49,13 @@ def train_model(epoch=5, batch_size=32, weight_name="model", learning_rate=0.01,
     # Compiler le modèle
     model.compile(optimizer=Adam(lr=learning_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 
-    # Ajouter le callback TensorBoard
-    log_dir = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1, write_graph=True, write_images=True)
+    # Ajouter le callback ModelCheckpoint
+    checkpoint = ModelCheckpoint(weight_name + ".h5", monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 
     clear_terminal()
-    model.fit(X_train, y_train, epochs=epoch, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=[tensorboard_callback])
+    model.fit(X_train, y_train, epochs=epoch, batch_size=batch_size, validation_data=(X_val, y_val), callbacks=[checkpoint])
 
-    #  Not overwrite on the existing weights
-    i = 1
-    first = True
-    while os.path.exists(weight_name + ".tf"):
-        if first:
-            weight_name = weight_name + "_" + str(i)
-            first = False
-        else:
-            weight_name = weight_name.split("_")[0] + "_" + str(i)
-        i += 1
-    model.save(weight_name + ".tf")
-    print("\n \n \n \n The model has been saved in the file " + weight_name + ".tf")
-
+    print("\n \n \n \n The best model has been saved in the file " + weight_name + ".h5")
 
 if __name__ == "__main__":
     train_model(epoch=10)
