@@ -302,6 +302,8 @@ def debug(image, images_path):
 def _aug(images_path, quantity):
     for i in tqdm(range(quantity), desc="Augmenting images"):
         image_path = random.choice(os.listdir(images_path))
+        while "_augmented" in image_path:
+            image_path = random.choice(os.listdir(images_path))
         image_path = os.path.join(images_path, image_path)
         image_name = os.path.basename(image_path)
         image = cv2.imread(image_path)
@@ -309,13 +311,14 @@ def _aug(images_path, quantity):
             augmented_image = _apply(image)
         except :
             new_image = cv2.imread(images_path + "/" + random.choice(os.listdir(images_path)))
+            while "_augmented" in image_path:
+                new_image = cv2.imread(images_path + "/" + random.choice(os.listdir(images_path)))
             augmented_image = debug(new_image, images_path)
         _save(augmented_image, images_path, image_name)
 
 
 def data_augmentation(path, quantity):
     quantity = int(quantity/2) 
-    cat_path = os.path.join(path, "cat")
-    _aug(cat_path, quantity)
-    nocat_path = os.path.join(path, "no-cat")
-    _aug(nocat_path, quantity)
+    for folder in ['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox']:
+        folder_path = os.path.join(path, folder)
+        _aug(folder_path, quantity)
