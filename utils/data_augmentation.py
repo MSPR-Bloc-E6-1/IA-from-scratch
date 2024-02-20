@@ -296,7 +296,10 @@ def debug(image, images_path):
         augmented_image = _apply(image)
     except :
         new_image = cv2.imread(images_path + "/" + random.choice(os.listdir(images_path)))
-        augmented_image = _apply(new_image)
+        try :
+            augmented_image = _apply(new_image)
+        except :
+            augmented_image = debug(new_image, images_path)
     return augmented_image
     
 def _aug(images_path, quantity):
