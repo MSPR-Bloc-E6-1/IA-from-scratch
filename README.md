@@ -1,6 +1,6 @@
-# Classification de Chats et no_cats
+# Classification des empreintes d'animaux
 
-Ce projet vise à réaliser une classification d'images de chats et non-chats. Les test on été effectué sur des datasets qui peuvent être téléchargé à partir des lien suivants : [Kaggle](https://www.kaggle.com/datasets/iamsouravbanerjee/animal-image-dataset-90-different-animals?resource=download) pour les chats et [Archive.org](https://archive.org/details/CAT_DATASET) pour les non-chats.
+Ce projet vise à réaliser une classification d'images d'empreintes d'animaux parmi 12 classes différentes. Les empreintes d'animaux sont réparties dans les catégories suivantes : ['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox']. Le modèle utilisé pour cette classification est une adaptation du modèle VGG16.
 
 ## Prérequis
 
@@ -15,7 +15,6 @@ Assurez-vous d'avoir les éléments suivants installés sur votre environnement 
 - seaborn==0.13.1
 - tensorflow==2.15.0
 - tqdm==4.66.1
-
 
 ## Utilisation
 
@@ -40,7 +39,7 @@ Pour utiliser ce projet, vous pouvez exécuter le fichier `run.py` avec les argu
 
 Si vous spécifiez plusieurs arguments parmi 'train', 'eval' et 'detect', une erreur sera levée.
 
-Si vous ne spécifiez aucun arguments vosu pourrez acceder a l'interface pour effectuer une inference sur l'iamge et avec le poid de votre choix.
+Si vous ne spécifiez aucun argument, vous pourrez accéder à l'interface pour effectuer une inférence sur l'image avec le poids de votre choix.
 
 Exemples d'utilisation :
 ```bash
@@ -52,11 +51,11 @@ python run.py
 python run.py --eval --model_path weights/model_890.tf
 ```
 
-### Entrainement
+### Entraînement
 
 1. Clonez ce dépôt sur votre machine locale.
 2. Téléchargez le(s) dataset(s) de votre choix.
-3. Si les données sont déjà séparé ou que vous souahitez vous même le faire, extrayez les fichiers du dataset dans le répertoire `data` du projet. et séparer les fichiers de la facon suivante :
+3. Si les données sont déjà séparées ou que vous souhaitez le faire vous-même, extrayez les fichiers du dataset dans le répertoire `data` du projet. Séparez ensuite les fichiers en dossiers "cat" et "no-cat" comme suit :
    ```
    > data
    >> train
@@ -66,38 +65,37 @@ python run.py --eval --model_path weights/model_890.tf
    >>> no-cat
    >>> cat
    ```
-4. Sinon séparez les siplement en dossiers "cat" et "no-cat" dans un repertoir de votre choix, tel que "data_desoranizeds" par exemple.
+   Sinon, séparez-les simplement en dossiers "cat" et "no-cat" dans un répertoire de votre choix, tel que "data_desorganized" par exemple.
 
 ```bash
 python run.py --train --epoch 10 --batch_size 64 --weight_name my_personal_weight --learning_rate 0.0001 --augmentation 0.2
 ```
 
+### Information sur le modèle
 
-## Information sur le modèle
+Le modèle utilisé est une adaptation de l'architecture VGG16, pré-entraînée sur ImageNet. Certaines couches de ce modèle ont été gardées tandis que d'autres ont été modifiées ou ajoutées pour répondre aux besoins spécifiques de la tâche de classification des empreintes d'animaux.
+![Schéma du modèle VGG16](https://miro.medium.com/v2/resize:fit:1400/1*NNifzsJ7tD2kAfBXt3AzEg.png)
 
-[Diaporama de présentation](https://www.canva.com/design/DAF5bDzfc-8/TaWygvwAZFYkLeaKwR2bTw/edit?utm_content=DAF5bDzfc-8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+#### Couches conservées de VGG16 :
 
-### Architechure du modèle
+- **Couches convolutives :** Les couches convolutives de VGG16 ont été conservées car elles sont efficaces pour extraire des caractéristiques de bas niveau dans les images. Ces couches sont importantes pour la détection des motifs visuels dans les empreintes d'animaux.
 
-1. **Couche d'Entrée (Flatten) :**
-   - **Fonction :** Cette couche est responsable de la transformation des images d'entrée en un format adapté pour le réseau de neurones.
-   - **Description :** Chaque image d'entrée, de taille 64x64 pixels avec 3 canaux de couleur (Rouge, Vert, Bleu), est aplatie dans un vecteur unidimensionnel. Cela signifie que chaque pixel de l'image est traité comme une caractéristique distincte.
+#### Couches modifiées ou ajoutées :
 
-2. **Couche Cachée (Dense, Activation 'relu') :**
-   - **Fonction :** Cette couche est responsable de l'apprentissage des caractéristiques importantes des données d'entrée.
-   - **Description :** Les 64x64x3 caractéristiques (uniques pour chaque pixel et canal de couleur) sont connectées à 128 neurones. Chaque connexion est associée à un poids qui sera ajusté pendant l'entraînement. L'activation 'relu' signifie que seules les valeurs positives sont transmises au neurone suivant, introduisant ainsi une non-linéarité dans le modèle.
+- **Couche de pooling globale :** Une couche de pooling globale a été ajoutée après les couches convolutives pour réduire la dimensionnalité de la sortie des couches précédentes tout en préservant les informations importantes.
 
-3. **Couche de Sortie (Dense, Activation 'softmax') :**
-   - **Fonction :** Cette couche est responsable de la génération des prédictions du modèle.
-   - **Description :** Les 128 valeurs issues de la couche cachée sont connectées à 2 neurones de sortie, représentant les classes "No-Chat" et "Chat". L'activation 'softmax' normalise ces valeurs en probabilités, indiquant la probabilité que l'image appartienne à chaque classe. La classe avec la probabilité la plus élevée est alors considérée comme la prédiction finale.
+- **Couches fully connected personnalisées :** Deux couches fully connected ont été ajoutées après la couche de pooling globale pour permettre au modèle de combiner les caractéristiques extraites par les couches convolutives et de produire des prédictions pour les différentes classes d'empreintes d'animaux.
 
-4. **Fonction de Perte (Categorical Crossentropy) :**
-   - **Fonction :** Mesure la différence entre les prédictions du modèle et les étiquettes réelles.
-   - **Description :** L'objectif est de minimiser cette fonction pendant l'entraînement, afin que les prédictions du modèle se rapprochent le plus possible des vraies étiquettes.
+- **Couche de dropout :** Une couche de dropout a été ajoutée pour réduire le surajustement en désactivant aléatoirement un certain pourcentage des neurones lors de l'entraînement, ce qui permet d'améliorer la généralisation du modèle.
 
-5. **Optimiseur (Stochastic Gradient Descent, SGD) :**
-   - **Fonction :** Optimise les poids du modèle pour minimiser la fonction de perte.
-   - **Description :** L'optimiseur ajuste itérativement les poids du modèle pour réduire l'erreur entre les prédictions et les vraies étiquettes.
+- **Couche de sortie :** Une couche de sortie avec une fonction d'activation softmax a été ajoutée pour produire des probabilités de classification pour chaque classe d'empreintes d'animaux.
 
-En résumé, ce modèle prend des images de 64x64 pixels en entrée, apprend des caractéristiques importantes dans une couche cachée, et génère des prédictions pour deux classes (No-Chat et Chat) à l'aide d'une couche de sortie. L'entraînement vise à ajuster les poids pour que les prédictions soient aussi précises que possible.
+#### Rôle des couches ajoutées :
 
+- La couche de pooling globale réduit la dimensionnalité de la sortie des couches convolutives tout en préservant les informations importantes, ce qui permet d'économiser du temps de calcul et de réduire le risque de surajustement.
+
+- Les couches fully connected personnalisées combinent les caractéristiques extraites par les couches convolutives et les transforment en vecteurs de caractéristiques, qui sont ensuite utilisés pour produire des prédictions pour les différentes classes d'empreintes d'animaux.
+
+- La couche de dropout aide à régulariser le modèle en réduisant le surajustement pendant l'entraînement en désactivant aléatoirement un certain pourcentage des neurones, ce qui permet d'améliorer la généralisation du modèle.
+
+- La couche de sortie avec une fonction d'activation softmax produit des probabilités de classification pour chaque classe d'empreintes d'animaux, permettant ainsi de déterminer la classe la plus probable pour une empreinte donnée.

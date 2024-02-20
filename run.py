@@ -33,6 +33,7 @@ args = parser.parse_args()
 
 if sum([args.train, args.eval, args.detect]) > 1:
     raise ValueError("Only one argument among 'train', 'eval', and 'detect' can be specified.")
+
 elif args.train:
     clear_terminal()
     print("Training the model: \n \n \n")
@@ -43,15 +44,18 @@ elif args.train:
         evaluate_model("./weights/"+args.weight_name+".h5", ['accuracy', 'confusion_matrix', 'classification_report'])
     if args.augmentation != 0.0 :
         for dossier_racine, _, fichiers in os.walk('./data'):
-            [os.remove(os.path.join(dossier_racine, fichier)) for fichier in fichiers if fichier.endswith('_augmented')]
+            [os.remove(os.path.join(dossier_racine, fichier)) for fichier in fichiers if fichier.split(".")[0].endswith('_augmented')]
+
 elif args.eval:
     clear_terminal()
     print("Evaluating the model: \n \n \n")
     evaluate_model(args.model_path, args.metrics, args.no_save_cm, args.no_save_txt)
+
 elif args.detect:
     clear_terminal()
     print("Detecting the class: \n \n \n")
     infer_image(args.image_path, args.model_path)
+    
 else:
     clear_terminal()
     print("No argument specified. Please specify one argument among 'train', 'eval', and 'detect'.")
