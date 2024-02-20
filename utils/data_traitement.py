@@ -11,6 +11,8 @@ from PIL import Image
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
+from skimage.transform import resize
+import numpy as np
 
 _data_folder = "data"
 
@@ -29,27 +31,22 @@ def _check_data_folder():
     """
     train_folder = os.path.join(_data_folder, "train")
     test_folder = os.path.join(_data_folder, "test")
-    train_nocat_file = os.path.join(train_folder, "no-cat")
-    train_cat_file = os.path.join(train_folder, "cat")
-    test_nocat_file = os.path.join(test_folder, "no-cat")
-    test_cat_file = os.path.join(test_folder, "cat")
+    val_folder = os.path.join(_data_folder, "val")
+    classes = ['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox']
 
-    if os.path.exists(_data_folder) and os.path.isdir(_data_folder):
-        if os.path.exists(train_folder) and os.path.isdir(train_folder):
-            if os.path.exists(test_folder) and os.path.isdir(test_folder):
-                if os.path.exists(train_nocat_file) and os.path.isdir(train_nocat_file) and len(os.listdir(train_nocat_file)) > 0:
-                    if os.path.exists(train_cat_file) and os.path.isdir(train_cat_file) and len(os.listdir(train_cat_file)) > 0:
-                        if os.path.exists(test_nocat_file) and os.path.isdir(test_nocat_file) and len(os.listdir(test_nocat_file)) > 0:
-                            if os.path.exists(test_cat_file) and os.path.isdir(test_cat_file) and len(os.listdir(test_cat_file)) > 0:
-                                return True
+    for class_name in classes:
+        class_train_folder = os.path.join(train_folder, class_name)
+        class_test_folder = os.path.join(test_folder, class_name)
+        class_val_folder = os.path.join(val_folder, class_name)
 
-    return False
+        if not os.path.exists(class_train_folder) or not os.path.isdir(class_train_folder) or len(os.listdir(class_train_folder)) == 0:
+            return False
+        if not os.path.exists(class_test_folder) or not os.path.isdir(class_test_folder) or len(os.listdir(class_test_folder)) == 0:
+            return False
+        if not os.path.exists(class_val_folder) or not os.path.isdir(class_val_folder) or len(os.listdir(class_val_folder)) == 0:
+            return False
 
-import os
-import shutil
-
-import os
-import shutil
+    return True
 
 def _destructure_data(path):
     """Move all data (images) that are subfolders of path to the root of path and delete the subfolders.
@@ -102,10 +99,7 @@ def _organize_data(data_disorganized_path):
     _data_folder = "data"
     train_folder = os.path.join(_data_folder, "train")
     test_folder = os.path.join(_data_folder, "test")
-    train_nocat_file = os.path.join(train_folder, "no-cat")
-    train_cat_file = os.path.join(train_folder, "cat")
-    test_nocat_file = os.path.join(test_folder, "no-cat")
-    test_cat_file = os.path.join(test_folder, "cat")
+    val_folder = os.path.join(_data_folder, "val")
 
     if not os.path.exists(_data_folder):
         os.mkdir(_data_folder)
@@ -113,82 +107,88 @@ def _organize_data(data_disorganized_path):
         os.mkdir(train_folder)
     if not os.path.exists(test_folder):
         os.mkdir(test_folder)
-    if not os.path.exists(train_nocat_file):
-        os.mkdir(train_nocat_file)
-    if not os.path.exists(train_cat_file):
-        os.mkdir(train_cat_file)
-    if not os.path.exists(test_nocat_file):
-        os.mkdir(test_nocat_file)
-    if not os.path.exists(test_cat_file):
-        os.mkdir(test_cat_file)
+    if not os.path.exists(val_folder):
+        os.mkdir(val_folder)
 
-    nocat_path = os.path.join(data_disorganized_path, "no-cat")
-    cat_path = os.path.join(data_disorganized_path, "cat")
+    classes = ['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox']
 
-    _destructure_data(nocat_path)
-    _destructure_data(cat_path)
+    for class_name in classes:
+        class_train_folder = os.path.join(train_folder, class_name)
+        class_test_folder = os.path.join(test_folder, class_name)
+        class_val_folder = os.path.join(val_folder, class_name)
 
-    try:
-        nocat_train, nocat_test = train_test_split(os.listdir(nocat_path), test_size=0.2, random_state=42)
-        cat_train, cat_test = train_test_split(os.listdir(cat_path), test_size=0.2, random_state=42)
-    except Exception as e:
-        raise ValueError("Please separate the data into 'cat' and 'no-cat' folders")
+        if not os.path.exists(class_train_folder):
+            os.mkdir(class_train_folder)
+        if not os.path.exists(class_test_folder):
+            os.mkdir(class_test_folder)
+        if not os.path.exists(class_val_folder):
+            os.mkdir(class_val_folder)
 
-    for file in nocat_train:
+        class_path = os.path.join(data_disorganized_path, class_name)
+        _destructure_data(class_path)
+
         try:
-            shutil.move(os.path.join(nocat_path, file), train_nocat_file)
-        except shutil.Error as e:
-            pass
-    for file in cat_train:
-        try:
-            shutil.move(os.path.join(cat_path, file), train_cat_file)
-        except shutil.Error as e:
-            pass
+            class_train, class_test = train_test_split(os.listdir(class_path), test_size=0.2, random_state=42)
+            class_train, class_val = train_test_split(class_train, test_size=0.2, random_state=42)
+        except Exception as e:
+            raise ValueError(f"Please separate the data into {class_name} folders")
 
-    for file in nocat_test:
-        try:
-            shutil.move(os.path.join(nocat_path, file), test_nocat_file)
-        except shutil.Error as e:
-            pass
-    for file in cat_test:
-        try:
-            shutil.move(os.path.join(cat_path, file), test_cat_file)
-        except shutil.Error as e:
-            pass
+        for file in class_train:
+            try:
+                shutil.move(os.path.join(class_path, file), class_train_folder)
+            except shutil.Error as e:
+                pass
+        for file in class_test:
+            try:
+                shutil.move(os.path.join(class_path, file), class_test_folder)
+            except shutil.Error as e:
+                pass
+        for file in class_val:
+            try:
+                shutil.move(os.path.join(class_path, file), class_val_folder)
+            except shutil.Error as e:
+                pass
 
     return True
 
 
 def _data_normalized(path_data):
-    images_no_cat, labels_no_cat = load_images(os.path.join(path_data, "no-cat"), "no-cat")
+    classes = ['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox']
+    images = []
+    labels = []
 
-    images_cat, labels_cat = load_images(os.path.join(path_data, "cat"), "cat")
+    for i, class_name in enumerate(classes):
+        class_images, class_labels = load_images(os.path.join(path_data, class_name), class_name)
+        images.append(class_images)
+        labels.append(class_labels)
 
-    X = np.concatenate((images_no_cat, images_cat), axis=0)
-    Y = np.concatenate((labels_no_cat, labels_cat), axis=0)
+    X = np.concatenate(images, axis=0)
+    Y = np.concatenate(labels, axis=0)
 
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(Y)
 
-    y_encoded = to_categorical(y_encoded, num_classes=2)
+    y_encoded = to_categorical(y_encoded, num_classes=len(classes))
 
-    X_normalized = X / 255.0
+    # Normalisation par z-score
+    X_normalized = (X - np.mean(X)) / np.std(X)
+    X_resize = np.array([resize(image, (128, 128)) for image in X_normalized])
 
-    return X_normalized, y_encoded
+    return X_resize, y_encoded
+
 
 
 
 def load_data(type=None, img_path=None, augmentation=0.0):
     if type is not None:
         if not _check_data_folder():
-            data_disorganized_path = input("The data is not organized in the correct format.\nChoose a path where your data is separated into 'cat' and 'no-cat' folders: \n")
+            data_disorganized_path = input("The data is not organized in the correct format.\nChoose a path where your data is separated into an animals folders: \n")
             _organize_data(data_disorganized_path)
-        if type != "train" and type != "test":
-            raise ValueError("The type must be 'train' or 'test'")
+        if type != "train" and type != "test" and type != "val":
+            raise ValueError("The type must be 'train', 'test' or 'val'")
         path_data = os.path.join(_data_folder, type)
         if type == "train":
             if augmentation > 0.0:
-                # Number of images in the subfolders of path_data:
                 total_data_count = 0
                 for file in os.listdir(path_data):
                     total_data_count += len(os.listdir(os.path.join(path_data, file)))
