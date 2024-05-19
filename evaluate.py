@@ -33,44 +33,46 @@ def evaluate_model(model_path, metrics=['accuracy', 'confusion_matrix', 'classif
     Returns:
         None
     """
+    model_path = model_path.split('/')[-1]
     depo = "metrics/"+model_path.split("/")[-1]+"/"
     depo = depo.split(".")[0]
     if not os.path.exists(depo):
         os.makedirs(depo)
 
-    X, y_test = load_data(type="test")
-    
+    df, _, _ = load_data()
+
+    X_test, y_test = df["test_images"], df["test_labels"]
+
     model = load_model(model_path)
-
-    # Predictions on test data
-    y_pred = model.predict(X)
+    y_pred = model.predict(X_test)
+    y_test_encoded = to_categorical(y_test)
     y_pred_classes = np.argmax(y_pred, axis=1)
+    y_true_classes = np.argmax(y_test_encoded, axis=1)
 
+    accuracy = np.mean(y_pred_classes == y_true_classes)
     results = {}
 
-    # Calculate accuracy
     if 'accuracy' in metrics:
-        accuracy = np.sum(y_pred_classes == np.argmax(y_test, axis=1)) / len(y_test)
         results['accuracy'] = accuracy
+        print("Accuracy:", accuracy)
 
-    # Calculate confusion matrix
     if 'confusion_matrix' in metrics:
-        conf_matrix = confusion_matrix(np.argmax(y_test, axis=1), y_pred_classes)
-        results['confusion_matrix'] = conf_matrix
+        cm = confusion_matrix(y_true_classes, y_pred_classes)
+        results['confusion_matrix'] = cm
         if save_cm:
-            plt.figure(figsize=(8, 6))
-            sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox'], yticklabels=['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox'])
+            plt.figure(figsize=(12, 8))
+            sns.heatmap(cm, annot=True, cmap='Blues', fmt='g')
+            plt.xlabel('Predicted')
+            plt.ylabel('Actual')
             plt.title('Confusion Matrix')
-            plt.xlabel('Predictions')
-            plt.ylabel('True Labels')
             plt.savefig(depo+'/confusion_matrix.png')
 
-    # Calculate classification report
     if 'classification_report' in metrics:
-        class_report = classification_report(np.argmax(y_test, axis=1), y_pred_classes, target_names=['background', 'beaver', 'cat', 'dog', 'coyote', 'squirrel', 'rabbit', 'wolf', 'lynx', 'bear', 'puma', 'rat', 'raccoon', 'fox'])
-        results['classification_report'] = class_report
+        cr = classification_report(y_true_classes, y_pred_classes)
+        results['classification_report'] = cr
+        print(cr)
 
-    # Save textual metrics in a file
+
     if save_txt:
         with open(depo+'/metrics.txt', 'w') as file:
             for metric, value in results.items():
@@ -79,4 +81,4 @@ def evaluate_model(model_path, metrics=['accuracy', 'confusion_matrix', 'classif
     print(f"The metrics have been saved in the folder {depo}.")
 
 if __name__ == "__main__":
-    evaluate_model("weights/model.tf", metrics=['accuracy', 'confusion_matrix', 'classification_report'])
+    evaluate_model("./weights/modelv2/modelv2.h5", metrics=['accuracy', 'confusion_matrix', 'classification_report'])
