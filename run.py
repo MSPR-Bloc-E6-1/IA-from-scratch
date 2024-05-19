@@ -14,8 +14,8 @@ parser.add_argument('--eval', action='store_true')
 parser.add_argument('--detect', action='store_true')
 
 if parser.parse_known_args()[0].train:
-    parser.add_argument('--epoch', type=int, default=5)
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--epoch', type=int, default=10)
+    parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--weight_name', type=str, default='model')
     parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--augmentation', type=float, default=0.0)
@@ -37,14 +37,14 @@ if sum([args.train, args.eval, args.detect]) > 1:
 elif args.train:
     clear_terminal()
     print("Training the model: \n \n \n")
-    train_model(args.epoch, args.batch_size, args.weight_name, args.learning_rate, args.augmentation)
-    if args.auto_eval == True:
-        clear_terminal()
-        print("Evaluating the model: \n \n \n")
-        evaluate_model("./weights/"+args.weight_name+".h5", ['accuracy', 'confusion_matrix', 'classification_report'])
+    _, _, model_path = train_model(args.epoch, args.batch_size, args.weight_name, args.learning_rate, args.augmentation)
     if args.augmentation != 0.0 :
         for dossier_racine, _, fichiers in os.walk('./data'):
             [os.remove(os.path.join(dossier_racine, fichier)) for fichier in fichiers if fichier.split(".")[0].endswith('_augmented')]
+    if args.auto_eval == True:
+        clear_terminal()
+        print("Evaluating the model: \n \n \n")
+        evaluate_model(model_path[0:-3], ['accuracy', 'confusion_matrix', 'classification_report'])
 
 elif args.eval:
     clear_terminal()
