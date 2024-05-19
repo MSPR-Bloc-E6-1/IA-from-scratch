@@ -1,15 +1,20 @@
 import os
 
+import cv2
+import numpy as np
+import time
+
 # Disable OneDNN optimization options
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-from utils.utils import clear_terminal
+from utils.utils import load_model
 
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.inception_v3 import preprocess_input, decode_predictions
 import numpy as np
-from tensorflow.keras.models import load_model
 
+import tensorflow as tf
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.applications import ResNet50
 from utils.data_traitement import load_data
+import pickle
 
 
 def infer_image(image_path, model_path):
@@ -23,14 +28,33 @@ def infer_image(image_path, model_path):
     Retourne :
         None
     """
-    image = load_data(img_path=image_path)
+
+    # Load num_classes and labels
+    pkl = model_path.split('.h5')[0] + "_info.pkl"
+    with open(pkl, 'rb') as file:
+        info = pickle.load(file)
+    labels = info['labels']
+    
+        # Construction du modèle complet
     model = load_model(model_path)
+    start_time = time.time()
 
-    predictions = model.predict(image)
+    image = cv2.imread(str(image_path))
+    image = cv2.resize(image, (224, 224))
+    image = np.expand_dims(image, axis=0)
 
-    class_index = np.argmax(predictions)
-    classes = {0: 'background', 1: 'beaver', 2: 'cat', 3: 'dog', 4: 'coyote', 5: 'squirrel', 6: 'rabbit', 7: 'wolf', 8: 'lynx', 9: 'bear', 10: 'puma', 11: 'rat', 12: 'raccoon', 13: 'fox'}
-    predicted_class = classes[class_index]
-    clear_terminal()
-    print(f"Prédiction pour l'image {image_path} : {predicted_class}")
-    return predicted_class
+    prediction = model.predict(image)
+    predicted_class = np.argmax(prediction)
+
+    class_names = labels.names
+    predicted_label = class_names[predicted_class]
+
+    end_time = time.time()
+    inference_time = end_time - start_time
+    print("Temps d'inférence:", inference_time, "secondes")
+    print(predicted_label)
+
+    return predicted_label
+
+if __name__ == '__main__':
+    print(infer_image("D:\\EPSI\\Bachelor\\B3\\MSPR\\1\\IA-from-scratch\\data\\test\\bear\\1.jpg", "./weights/modelv2/modelv2.h5"))
